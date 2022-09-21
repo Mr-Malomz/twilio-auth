@@ -2,7 +2,7 @@ import { Client, Account } from 'appwrite';
 
 //create client
 const client = new Client();
-client.setEndpoint('http://localhost/v1').setProject('632a4573175fcb99d621');
+client.setEndpoint('http://localhost/v1').setProject('PROJECT ID GOES HERE');
 
 //create account
 const account = new Account(client);
