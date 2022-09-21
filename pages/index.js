@@ -1,13 +1,15 @@
 import Head from 'next/head';
 import { useState } from 'react';
-import { phoneAuth } from '../helper/utils';
+import { phoneAuth, validateSMS } from '../helper/utils';
 import styles from '../styles/Home.module.css';
 
 export default function Home() {
   const [value, setValue] = useState({
     phone: '',
-    auth_token: '',
+    otp: '',
   });
+  const [user, setUser] = useState(null);
+  const [isPhoneVerify, setIsPhoneVerify] = useState(false);
 
   const handleChange = (e) => {
     setValue({ ...value, [e.target.name]: e.target.value });
@@ -16,8 +18,26 @@ export default function Home() {
   const handleSubmit = (e) => {
     e.preventDefault();
     phoneAuth(value.phone)
-      .then((res) => console.log(res))
-      .catch((e) => console.log(e));
+      .then((res) => {
+        setUser(res.userId);
+        setIsPhoneVerify(true);
+      })
+      .catch((e) => {
+        alert('Error getting phone session!', e);
+      });
+  };
+
+  const handleValidatePhone = (e) => {
+    e.preventDefault();
+    validateSMS(user, value.otp)
+      .then((res) => {
+        alert(
+          `User successfully verified using for user with ID ${res.userId}, country Code ${res.countryCode}, and expires on ${res.expire}`
+        );
+      })
+      .catch((e) => {
+        alert('Error validating session!', e);
+      });
   };
 
   return (
@@ -33,21 +53,42 @@ export default function Home() {
           <h1 className='text-xl font-bold mb-6 text-indigo-900 text-center'>
             Appwrite | Twilio Auth
           </h1>
-          <form onSubmit={handleSubmit}>
-            <fieldset className='mb-4'>
-              <label className='text-sm block mb-2'>Phone Number</label>
-              <input
-                className='h-10 border w-full rounded border-gray-400'
-                required
-                type='tel'
-                name='phone'
-                onChange={handleChange}
-              />
-            </fieldset>
-            <button className='bg-indigo-900 w-full h-10 rounded font-semibold text-white hover:bg-indigo-700'>
-              Submit
-            </button>
-          </form>
+
+          {isPhoneVerify ? (
+            // Verify OTP using phone session
+            <form onSubmit={handleValidatePhone}>
+              <fieldset className='mb-4'>
+                <label className='text-sm block mb-2'>OTP</label>
+                <input
+                  className='h-10 border w-full rounded border-gray-400'
+                  required
+                  type='number'
+                  name='otp'
+                  onChange={handleChange}
+                />
+              </fieldset>
+              <button className='bg-indigo-900 w-full h-10 rounded font-semibold text-white hover:bg-indigo-700'>
+                Validate OTP
+              </button>
+            </form>
+          ) : (
+            //Get Phone Session Form
+            <form onSubmit={handleSubmit}>
+              <fieldset className='mb-4'>
+                <label className='text-sm block mb-2'>Phone Number</label>
+                <input
+                  className='h-10 border w-full rounded border-gray-400'
+                  required
+                  type='tel'
+                  name='phone'
+                  onChange={handleChange}
+                />
+              </fieldset>
+              <button className='bg-indigo-900 w-full h-10 rounded font-semibold text-white hover:bg-indigo-700'>
+                Submit
+              </button>
+            </form>
+          )}
         </div>
       </main>
     </div>
